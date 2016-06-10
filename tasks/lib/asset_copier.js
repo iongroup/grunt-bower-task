@@ -1,9 +1,8 @@
 var _ = require('lodash');
 var Emitter = require('events').EventEmitter;
-var wrench = require('wrench');
 var path = require('path');
 var grunt = require('grunt');
-var fs = require('fs');
+var fs = require('fs-extra');
 
 var Copier = function(assets, options, report) {
   this.assets = assets;
@@ -35,8 +34,6 @@ Copier.prototype.copy = function() {
 
 Copier.prototype.copyAssets = function(type, assets) {
   var self = this;
-  var options = this.options;
-
   _(assets).each(function(sources, pkg) {
     _(sources).each(function(source) {
       var destination;
@@ -49,11 +46,8 @@ Copier.prototype.copyAssets = function(type, assets) {
         grunt.file.copy(source, destination);
       } else {
         destination = destinationDir;
-        var opts = {};
-        if (!options || !options.cleanTargetDir) {
-          opts.preserve = true;
-        }
-        wrench.copyDirSyncRecursive(source, destination, opts);
+
+        fs.copySync(source, destination, {clobber: true, dereference: true});
       }
       self.report(source, destination, isFile);
     });

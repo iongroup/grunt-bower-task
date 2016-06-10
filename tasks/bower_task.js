@@ -20,13 +20,13 @@ module.exports = function(grunt) {
     LayoutsManager;
 
   function requireDependencies () {
-    bower = require('bower'),
-    path = require('path'),
-    async = require('async'),
-    colors = require('colors'),
-    rimraf = require('rimraf').sync,
-    BowerAssets = require('./lib/bower_assets'),
-    AssetCopier = require('./lib/asset_copier'),
+    bower = require('bower');
+    path = require('path');
+    async = require('async');
+    colors = require('colors');
+    rimraf = require('rimraf').sync;
+    BowerAssets = require('./lib/bower_assets');
+    AssetCopier = require('./lib/asset_copier');
     LayoutsManager = require('./lib/layouts_manager');
   }
 
@@ -41,6 +41,15 @@ module.exports = function(grunt) {
   function clean(dir, callback) {
     rimraf(dir);
     callback();
+  }
+
+  function prune(options,callback) {
+    bower.commands.prune([], options.bowerOptions)
+      .on('log', function(result) {
+        log(['bower', result.id.cyan, result.message].join(' '));
+      })
+      .on('error',fail)
+      .on('end',callback);
   }
 
   function install(options, callback) {
@@ -73,8 +82,9 @@ module.exports = function(grunt) {
         targetDir: './lib',
         layout: 'byType',
         install: true,
+        prune: false,
         verbose: false,
-        copy: true,
+        copy: false,
         bowerOptions: {}
       }),
       add = function(successMessage, fn) {
@@ -114,6 +124,12 @@ module.exports = function(grunt) {
       add('Installed bower packages', function(callback) {
         install(options, callback);
       });
+    }
+
+    if (options.prune) {
+      add('Pruned bower packages', function(callback) {
+        prune(options,callback);
+        });
     }
 
     if (options.copy) {
